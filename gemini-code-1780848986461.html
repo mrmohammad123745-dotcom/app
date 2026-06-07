@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#10b981">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>سامانه پیشرفته مدیریت انبار و کاتالوگ کالا</title>
@@ -1024,6 +1026,10 @@
         function scrollToTop() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+        <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./service-worker.js");
+}
     </script>
 </body>
 </html>
