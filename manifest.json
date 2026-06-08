@@ -2,7 +2,7 @@
   "name": "Rahimi Store",
   "short_name": "Rahimi",
   "start_url": "/app/"
-  "display": "standalone",
+  "display": "standalone"
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
   "icons": [
