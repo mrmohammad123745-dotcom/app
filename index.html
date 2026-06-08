@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>سامانه پیشرفته مدیریت انبار و کاتالوگ کالا</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            scrollbar-width: none;
+        }
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .dark .glass {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .safe-bottom {
+            padding-bottom: calc(env(safe-area-inset-bottom) + 5rem);
+        }
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .pulse-low {
+            animation: pulse-subtle 2s infinite;
+        }
+    </style>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#10b981">
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300 min-h-screen flex flex-col">
+
+    <div id="loadingScreen" class="fixed inset-0 z-50 bg-slate-900 text-white flex flex-col justify-center items-center gap-4 transition-opacity duration-500">
+        <div class="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <h1 class="text-xl font-bold tracking-wide">سامانه هوشمند مدیریت انبار</h1>
+        <p class="text-xs text-slate-400">در حال بارگذاری داده‌ها...</p>
+    </div>
+
+    <div id="toastContainer" class="fixed top-4 left-4 right-4 md:left-auto md:w-96 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="confirmModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div class="glass dark:glass border border-white/20 dark:border-slate-700/50 rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center transform scale-95 transition-transform duration-300">
+            <div id="confirmIcon" class="w-16 h-16 mx-auto mb-4 bg-amber-100 dark:bg-amber-950/50 text-amber-500 rounded-full flex items-center justify-center text-2xl">
+                <i class="fa-solid fa-circle-exclamation"></i>
+            </div>
+            <h3 id="confirmTitle" class="text-lg font-bold mb-2">آیا مطمئن هستید؟</h3>
+            <p id="confirmMessage" class="text-sm text-slate-500 dark:text-slate-400 mb-6">این عملیات غیرقابل بازگشت است.</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button id="confirmCancelBtn" class="py-3 px-4 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 rounded-2xl font-semibold text-sm transition-colors">انصراف</button>
+                <button id="confirmSuccessBtn" class="py-3 px-4 bg-rose-500 hover:bg-rose-600 text-white rounded-2xl font-semibold text-sm transition-colors shadow-lg shadow-rose-500/20">تایید و ادامه</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="sticky top-0 z-30 glass border-b border-slate-200/50 dark:border-slate-800/50 px-4 py-3 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                <i class="fa-solid fa-cubes text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-md font-black tracking-tight" id="headerTitle">ویترین محصولات</h1>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500" id="headerSubtitle">لیست کالاهای فعال انبار</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="darkModeToggle" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 text-sm active:scale-95 transition-transform" aria-label="تغییر پوسته">
+                <i class="fa-solid fa-moon dark:hidden"></i>
+                <i class="fa-solid fa-sun hidden dark:block"></i>
+            </button>
+            <div id="adminBadge" class="hidden items-center gap-1 bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>مدیر انبار</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-4xl w-full mx-auto p-4 safe-bottom">
+        
+        <section id="page-showcase" class="app-page space-y-4">
+            <div class="glass border border-slate-200/60 dark:border-slate-800/60 rounded-2xl p-3 shadow-sm space-y-3">
+                <div class="relative">
+                    <span class="absolute inset-y-0 right-3 flex items-center text-slate-400 dark:text-slate-500">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="searchInput" placeholder="جستجوی نام کالا یا دسته بندی..." class="w-full pl-4 pr-10 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none text-slate-800 dark:text-slate-100">
+                </div>
+                <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar scroll-smooth" id="categoryTabs">
+                    </div>
+            </div>
+
+            <div class="flex justify-between items-center text-xs text-slate-400 px-1">
+                <span id="filteredCount">تعداد کالاها: ۰ مورد</span>
+                <span class="text-emerald-500 font-semibold cursor-pointer" onclick="clearFilters()">نمایش همه</span>
+            </div>
+
+            <div id="showcaseEmptyState" class="hidden text-center py-12 px-4 glass rounded-3xl border border-dashed border-slate-300 dark:border-slate-700">
+                <div class="w-16 h-16 mx-auto mb-3 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 text-xl">
+                    <i class="fa-solid fa-boxes-open"></i>
+                </div>
+                <h4 class="text-sm font-bold text-slate-600 dark:text-slate-400">هیچ کالایی پیدا نشد</h4>
+                <p class="text-xs text-slate-400 mt-1">داده‌ای منطبق با جستجو یا فیلتر فعلی وجود ندارد.</p>
+            </div>
+
+            <div id="productGrid" class="grid grid-cols-1 gap-4">
+                </div>
+        </section>
+
+
+        <section id="page-login" class="app-page hidden py-8">
+            <div class="w-full max-w-sm mx-auto glass border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-xl space-y-6">
+                <div class="text-center space-y-2">
+                    <div class="w-14 h-14 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 dark:text-indigo-400 rounded-2xl mx-auto flex items-center justify-center text-xl shadow-inner">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <h2 class="text-lg font-black">ورود به پنل مدیریت انبار</h2>
+                    <p class="text-xs text-slate-400">برای تغییر موجودی و اطلاعات کالا وارد شوید.</p>
+                </div>
+                <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500 mr-1">نام کاربری</label>
+                        <input type="text" id="usernameInput" required class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="نام کاربری پیش‌فرض: admin">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500 mr-1">رمز عبور</label>
+                        <input type="password" id="passwordInput" required class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="رمز عبور پیش‌فرض: 123456">
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/20 active:scale-[0.99] transition-transform mt-2">
+                        ورود امن به سامانه
+                    </button>
+                </form>
+            </div>
+        </section>
+
+
+        <section id="page-admin" class="app-page hidden space-y-6">
+            
+            <div class="grid grid-cols-2 gap-3" id="statsContainer">
+                <div class="glass border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm">
+                    <span class="text-[10px] font-bold text-slate-400 block mb-1">کل محصولات</span>
+                    <span class="text-xl font-black text-slate-700 dark:text-slate-200" id="stat-totalProducts">0</span>
+                    <span class="text-[10px] text-slate-400 block mt-1">عنوان کالا</span>
+                </div>
+                <div class="glass border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-4 shadow-sm">
+                    <span class="text-[10px] font-bold text-slate-400 block mb-1">موجودی کل انبار</span>
+                    <span class="text-xl font-black text-emerald-500" id="stat-totalStock">0</span>
+                    <span class="text-[10px] text-slate-400 block mt-1">عدد کالا</span>
+                </div>
+                <div class="glass border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-3 shadow-sm flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">موجود</span>
+                        <span class="text-sm font-bold" id="stat-instock">0</span>
+                    </div>
+                </div>
+                <div class="glass border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-3 shadow-sm flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">رو به اتمام</span>
+                        <span class="text-sm font-bold" id="stat-lowstock">0</span>
+                    </div>
+                </div>
+                <div class="glass border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-3 shadow-sm flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-rose-500"></div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">ناموجود</span>
+                        <span class="text-sm font-bold" id="stat-outofstock">0</span>
+                    </div>
+                </div>
+                <div class="glass border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-3 shadow-sm flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 block">ارزش سرمایه انبار</span>
+                        <span class="text-xs font-black text-indigo-500" id="stat-totalValue">۰ تومان</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass border border-dashed border-emerald-500/40 dark:border-emerald-500/30 rounded-2xl p-4 shadow-sm space-y-3">
+                <div class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs mb-1">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                    <span>سیستم پشتیبان‌گیری و انتقال داده یکپارچه</span>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">کل ساختار انبار شامل عنوان‌ها، آمار، موجودی عددی و تصاویر فشرده شده به فرمت متنی پایدار در قالب یک فایل منفرد توزیع‌پذیر است.</p>
+                <div class="grid grid-cols-2 gap-3 pt-1">
+                    <button onclick="exportInventoryBackup()" class="py-3 px-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/10 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-file-export text-sm"></i>
+                        <span>دریافت فایل انبار</span>
+                    </button>
+                    <button onclick="triggerImportFileInput()" class="py-3 px-3 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-transform">
+                        <i class="fa-solid fa-file-import text-sm text-indigo-500"></i>
+                        <span>بارگذاری فایل انبار</span>
+                    </button>
+                    <input type="file" id="importFileInput" class="hidden" accept=".json" onchange="importInventoryBackup(event)">
+                </div>
+            </div>
+
+            <div class="glass border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-5 shadow-sm space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                    <h3 id="formSectionTitle" class="text-sm font-black text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-emerald-500"></i>
+                        <span>افزودن محصول جدید به انبار</span>
+                    </h3>
+                    <button id="cancelEditBtn" onclick="resetProductForm()" class="hidden text-xs text-rose-500 font-bold bg-rose-50 dark:bg-rose-950/30 px-2.5 py-1 rounded-lg">انصراف از ویرایش</button>
+                </div>
+
+                <form id="productForm" onsubmit="saveProductData(event)" class="space-y-4">
+                    <input type="hidden" id="formProductId">
+                    
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-500 mr-1">تصویر کالا</label>
+                        <div class="flex items-center gap-4 bg-slate-100 dark:bg-slate-800/60 p-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 relative">
+                            <div id="imagePreviewContainer" class="w-16 h-16 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden border border-slate-300 dark:border-slate-600 shrink-0">
+                                <i class="fa-solid fa-camera text-slate-400 text-xl" id="previewPlaceholder"></i>
+                                <img id="productImagePreview" src="" class="w-full h-full object-cover hidden" alt="پیش نمایش">
+                            </div>
+                            <div class="space-y-1 flex-1">
+                                <label for="imageUploadInput" class="inline-block bg-white dark:bg-slate-700 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-[11px] font-bold cursor-pointer hover:bg-slate-50">انتخاب تصویر</label>
+                                <p class="text-[10px] text-slate-400">فایل فشرده اتوماتیک تبدیل به Base64 محلی می‌گردد.</p>
+                            </div>
+                            <input type="file" id="imageUploadInput" accept="image/*" class="hidden" onchange="previewAndConvertImage(event)">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-500 mr-1">نام محصول <span class="text-rose-500">*</span></label>
+                            <input type="text" id="formProductName" required class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-500 mr-1">دسته بندی <span class="text-rose-500">*</span></label>
+                            <input type="text" id="formProductCategory" required placeholder="مثال: پوشاک، الکترونیک" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-500 mr-1">قیمت کالا (تومان) <span class="text-rose-500">*</span></label>
+                            <input type="number" id="formProductPrice" required min="0" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-500 mr-1">تعداد موجودی انبار <span class="text-rose-500">*</span></label>
+                            <input type="number" id="formProductQuantity" required min="0" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm font-black text-emerald-600 dark:text-emerald-400 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500 mr-1">توضیحات تکمیلی</label>
+                        <textarea id="formProductDesc" rows="2" class="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea>
+                    </div>
+
+                    <button type="submit" id="submitFormBtn" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-500/10 active:scale-[0.99] transition-transform">
+                        ثبت نهایی کالا در سیستم
+                    </button>
+                </form>
+            </div>
+
+            <div class="space-y-3">
+                <h3 class="text-xs font-black text-slate-400 mr-1">عملیات سریع و لیست ویرایش کالاها</h3>
+                <div id="adminProductList" class="space-y-3">
+                    </div>
+            </div>
+
+            <div class="pt-4 text-center">
+                <button onclick="handleLogout()" class="px-5 py-2.5 bg-rose-50 dark:bg-rose-950/20 text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-950/40 rounded-xl text-xs font-bold transition-colors">
+                    <i class="fa-solid fa-power-off ml-1"></i> خروج از حساب مدیریت
+                </button>
+            </div>
+
+        </section>
+
+    </main>
+
+    <div id="detailsModal" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm hidden items-end justify-center p-0 md:items-center md:p-4 opacity-0 transition-opacity duration-300">
+        <div class="w-full md:max-w-md glass dark:glass border-t md:border border-white/20 dark:border-slate-700/50 rounded-t-[2.5rem] md:rounded-[2rem] p-6 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-300">
+            <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-5 md:hidden" onclick="closeDetailsModal()"></div>
+            
+            <div id="modalImageWrapper" class="w-full h-56 rounded-2xl bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-slate-700 shadow-inner relative mb-4">
+                <img id="modalImage" class="w-full h-full object-cover" src="" alt="تصویر محصول">
+            </div>
+
+            <div class="flex justify-between items-start gap-2 mb-2">
+                <div>
+                    <span id="modalCategory" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">دسته‌بندی</span>
+                    <h2 id="modalName" class="text-lg font-black text-slate-800 dark:text-slate-100">نام کالا وجود ندارد</h2>
+                </div>
+                <div id="modalBadge"></div>
+            </div>
+
+            <p id="modalDesc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-5 min-h-[40px] border-b border-slate-100 dark:border-slate-800 pb-3">توضیحات کالا</p>
+
+            <div class="bg-gradient-to-br from-slate-100 to-slate-200/60 dark:from-slate-800/80 dark:to-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-2xl p-4 flex items-center justify-between mb-4 shadow-sm">
+                <div class="space-y-0.5">
+                    <span class="text-[10px] font-bold text-slate-400 block">موجودی فعلی واحد انبار</span>
+                    <span class="text-3xl font-black text-slate-800 dark:text-white" id="modalStockValue">0 <span class="text-sm font-normal text-slate-400 mr-1">عدد</span></span>
+                </div>
+                <div id="modalStockStatusBox" class="px-4 py-2.5 rounded-xl font-black text-xs text-center min-w-[90px]">
+                    رو به اتمام
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/20 px-4 py-3.5 rounded-2xl border border-emerald-500/10 mb-6">
+                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">قیمت مصرف‌کننده:</span>
+                <span id="modalPrice" class="text-base font-black text-emerald-600 dark:text-emerald-400">۰ تومان</span>
+            </div>
+
+            <button onclick="closeDetailsModal()" class="w-full py-3.5 bg-slate-800 hover:bg-slate-900 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900 rounded-xl font-bold text-sm shadow-lg active:scale-[0.99] transition-transform">
+                بستن پنجره جزئیات
+            </button>
+        </div>
+    </div>
+
+    <button id="backToTopBtn" onclick="scrollToTop()" class="fixed bottom-24 left-4 w-10 h-10 rounded-full bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 shadow-xl flex items-center justify-center opacity-0 translate-y-5 pointer-events-none transition-all duration-300 z-30">
+        <i class="fa-solid fa-arrow-up text-sm"></i>
+    </button>
+
+    <nav class="fixed bottom-0 left-0 right-0 z-40 glass border-t border-slate-200/60 dark:border-slate-800/60 px-2 py-2 flex justify-around items-center shadow-lg shadow-black/10">
+        <button id="navBtn-showcase" onclick="switchAppTab('showcase')" class="flex flex-col items-center gap-1 py-1 px-4 rounded-xl text-emerald-500 transition-all">
+            <i class="fa-solid fa-store text-lg"></i>
+            <span class="text-[10px] font-bold">ویترین کالا</span>
+        </button>
+        <button id="navBtn-admin" onclick="switchAppTab('admin')" class="flex flex-col items-center gap-1 py-1 px-4 rounded-xl text-slate-400 dark:text-slate-500 transition-all">
+            <i class="fa-solid fa-layer-group text-lg"></i>
+            <span class="text-[10px] font-bold">مدیریت انبار</span>
+        </button>
+    </nav>
+
+
+    <script>
+        // --- DATA LAYER ---
+        let products = [];
+        let currentActiveCategory = "all";
+        let searchString = "";
+        let globalBase64ImageStr = "";
+        let activeAdminEditId = null;
+
+        const STORAGE_KEY = "PERSIAN_INVENTORY_DB";
+        const LOGIN_STATE_KEY = "ADMIN_AUTHENTICATED";
+        
+        // Mock Initial Dummy Seeding Structure if LocalStorage is Empty
+        const defaultSeedProducts = [
+            { id: "101", name: "گوشی هوشمند پرچمدار نوآور", category: "دیجیتال", description: "دارای دوربین پیشرفته ۲۰۰ مگاپیکسلی و باتری بادوام با ظرفیت بالا به همراه پردازنده نسل جدید ۲۰۲۶.", price: 45000000, quantity: 12, image: "", date: "۱۴۰۵/۰۳/۱۵" },
+            { id: "102", name: "کفش مخصوص دویدن ارگونومیک", category: "پوشاک و ورزش", description: "دارای لایه میانی منعطف پلیمری، کفی تنفس‌پذیر ضد تعریق برای استفاده دو ماراتن طولانی مدت بدون خستگی مفرط.", price: 2450000, quantity: 4, image: "", date: "۱۴۰۵/۰۳/۱۶" },
+            { id: "103", name: "ساعت هوشمند ضدآب اسپورت", category: "دیجیتال", description: "پشتیبانی کامل از سنسور ضربان قلب دقیق، نوار قلب و قدم‌شمار فعال به همراه پایش هوشمند اکسیژن خون در خواب.", price: 6800000, quantity: 0, image: "", date: "۱۴۰۵/۰۳/۱۷" }
+        ];
+
+        // --- LIFE CYCLE INIT ---
+        window.addEventListener('DOMContentLoaded', () => {
+            // Dark Mode Bootstrapping
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            // Database Loading Setup
+            const localData = localStorage.getItem(STORAGE_KEY);
+            if (localData) {
+                try {
+                    products = JSON.parse(localData);
+                } catch(e) {
+                    products = [...defaultSeedProducts];
+                    saveToLocalStorage();
+                }
+            } else {
+                products = [...defaultSeedProducts];
+                saveToLocalStorage();
+            }
+
+            // Sync User View Interface Framework
+            renderShowcaseView();
+            renderCategoryFilters();
+
+            // Set up Global Scroll Handler for BackToTop Button UI
+            window.addEventListener('scroll', () => {
+                const btn = document.getElementById('backToTopBtn');
+                if (window.scrollY > 300) {
+                    btn.classList.remove('opacity-0', 'translate-y-5', 'pointer-events-none');
+                } else {
+                    btn.classList.add('opacity-0', 'translate-y-5', 'pointer-events-none');
+                }
+            });
+
+            // Input Realtime Event Binds
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchString = e.target.value.trim();
+                renderShowcaseView();
+            });
+
+            // Dark Mode Button Bind Toggle
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+
+            // Terminate Loading Screen Fade Out Action
+            setTimeout(() => {
+                const loader = document.getElementById('loadingScreen');
+                loader.classList.add('opacity-0');
+                setTimeout(() => loader.remove(), 500);
+            }, 800);
+        });
+
+        // --- APPLICATION ROUTING LOGIC TAB SYSTEM ---
+        function switchAppTab(targetTab) {
+            // Clear current active highlights from bottom tab UI elements
+            const navShowcase = document.getElementById('navBtn-showcase');
+            const navAdmin = document.getElementById('navBtn-admin');
+            
+            navShowcase.classList.remove('text-emerald-500', 'text-slate-400', 'dark:text-slate-500');
+            navAdmin.classList.remove('text-emerald-500', 'text-slate-400', 'dark:text-slate-500');
+
+            document.querySelectorAll('.app-page').forEach(el => el.classList.add('hidden'));
+            
+            const isAuthed = localStorage.getItem(LOGIN_STATE_KEY) === 'true';
+            const adminBadge = document.getElementById('adminBadge');
+
+            if (targetTab === 'showcase') {
+                document.getElementById('page-showcase').classList.remove('hidden');
+                navShowcase.classList.add('text-emerald-500');
+                navAdmin.classList.add('text-slate-400', 'dark:text-slate-500');
+                
+                document.getElementById('headerTitle').innerText = "ویترین محصولات";
+                document.getElementById('headerSubtitle').innerText = "لیست کالاهای فعال انبار";
+                renderShowcaseView();
+                renderCategoryFilters();
+            } else if (targetTab === 'admin') {
+                navAdmin.classList.add('text-emerald-500');
+                navShowcase.classList.add('text-slate-400', 'dark:text-slate-500');
+                
+                if (isAuthed) {
+                    document.getElementById('page-admin').classList.remove('hidden');
+                    adminBadge.classList.remove('hidden');
+                    adminBadge.classList.add('flex');
+                    document.getElementById('headerTitle').innerText = "پنل مدیریت انبار";
+                    document.getElementById('headerSubtitle').innerText = "داشبورد عملیاتی و کنترل کالا";
+                    renderAdminDashboard();
+                } else {
+                    document.getElementById('page-login').classList.remove('hidden');
+                    adminBadge.classList.add('hidden');
+                    adminBadge.classList.remove('flex');
+                    document.getElementById('headerTitle').innerText = "ورود نظارتی";
+                    document.getElementById('headerSubtitle').innerText = "احراز هویت کارشناس مدیریت";
+                }
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // --- AUTH SYSTEM LAYER ---
+        function handleLogin(event) {
+            event.preventDefault();
+            const user = document.getElementById('usernameInput').value.trim();
+            const pass = document.getElementById('passwordInput').value.trim();
+
+            if (user === 'admin' && pass === '123456') {
+                localStorage.setItem(LOGIN_STATE_KEY, 'true');
+                showToast('ورود با موفقیت انجام شد', 'success');
+                document.getElementById('usernameInput').value = "";
+                document.getElementById('passwordInput').value = "";
+                switchAppTab('admin');
+            } else {
+                showToast('نام کاربری یا رمز عبور اشتباه است', 'error');
+            }
+        }
+
+        function handleLogout() {
+            showConfirmModal('خروج از حساب کاری', 'آیا مایل به بستن نشست کاربری فعلی هستید؟', () => {
+                localStorage.removeItem(LOGIN_STATE_KEY);
+                showToast('از حساب کاربری خارج شدید', 'info');
+                switchAppTab('showcase');
+            });
+        }
+
+        // --- DATA PERSISTENCE MANAGEMENT UTILS ---
+        function saveToLocalStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+        }
+
+        // --- CALCULATION RULES AND STATUS BADGE WRAPPERS ---
+        function calculateStockStatus(qty) {
+            const count = Number(qty);
+            if (count === 0) return { label: "ناموجود", css: "bg-rose-100 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400" };
+            if (count >= 1 && count <= 5) return { label: "رو به اتمام", css: "bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400" };
+            return { label: "موجود", css: "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400" };
+        }
+
+        function formatPersianCurrency(num) {
+            return Number(num).toLocaleString('fa-IR') + ' تومان';
+        }
+
+        function getPersianNumberStr(num) {
+            return Number(num).toLocaleString('fa-IR');
+        }
+
+        function getTodayPersianDateStr() {
+            const d = new Date();
+            return new Intl.DateTimeFormat('fa-IR').format(d);
+        }
+
+        // --- RENDERING SHOWCASE VIEW engine ---
+        function renderShowcaseView() {
+            const grid = document.getElementById('productGrid');
+            const emptyState = document.getElementById('showcaseEmptyState');
+            grid.innerHTML = "";
+
+            const filtered = products.filter(p => {
+                const matchCategory = (currentActiveCategory === 'all' || p.category === currentActiveCategory);
+                const matchSearch = p.name.toLowerCase().includes(searchString.toLowerCase()) || 
+                                    p.category.toLowerCase().includes(searchString.toLowerCase());
+                return matchCategory && matchSearch;
+            });
+
+            document.getElementById('filteredCount').innerText = `تعداد کالاها: ${getPersianNumberStr(filtered.length)} مورد`;
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            filtered.forEach(p => {
+                const status = calculateStockStatus(p.quantity);
+                const isOutOfStock = Number(p.quantity) === 0;
+                const isLowStock = Number(p.quantity) >= 1 && Number(p.quantity) <= 5;
+                
+                const card = document.createElement('div');
+                card.className = "glass border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-4 shadow-sm flex flex-col gap-3 active:scale-[0.99] transition-transform cursor-pointer relative";
+                card.setAttribute('onclick', `openDetailsModal('${p.id}')`);
+
+                const fallbackSvg = `<div class="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center text-slate-400"><i class="fa-solid fa-box text-3xl"></i></div>`;
+                const imgTag = p.image ? `<img src="${p.image}" class="w-full h-full object-cover" alt="${p.name}">` : fallbackSvg;
+
+                card.innerHTML = `
+                    <div class="flex gap-4">
+                        <div class="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-slate-100 border border-slate-200 dark:border-slate-700 shadow-inner">
+                            ${imgTag}
+                        </div>
+                        <div class="flex flex-col justify-between flex-1 py-0.5">
+                            <div class="space-y-1">
+                                <span class="text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">${p.category}</span>
+                                <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 line-clamp-1">${p.name}</h3>
+                                <p class="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1">${p.description || 'بدون توضیحات تکمیلی کالا'}</p>
+                            </div>
+                            <div class="text-xs font-black text-emerald-600 dark:text-emerald-400">
+                                ${formatPersianCurrency(p.price)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-1 bg-slate-100/80 dark:bg-slate-800/50 border border-slate-200/40 dark:border-slate-700/40 rounded-xl px-3 py-2 flex items-center justify-between">
+                        <div class="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
+                            <i class="fa-solid fa-warehouse"></i>
+                            <span>وضعیت انبار:</span>
+                            <span class="px-2 py-0.5 rounded-md text-[9px] ${status.css}">${status.label}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-slate-400 block -mb-1">موجودی کالا</span>
+                            <span class="text-lg font-black ${isOutOfStock ? 'text-rose-500' : isLowStock ? 'text-amber-500 pulse-low' : 'text-slate-800 dark:text-white'}">
+                                ${getPersianNumberStr(p.quantity)} <span class="text-[10px] font-normal text-slate-400">عدد</span>
+                            </span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderCategoryFilters() {
+            const tabsContainer = document.getElementById('categoryTabs');
+            tabsContainer.innerHTML = "";
+
+            const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))];
+
+            categories.forEach(cat => {
+                const isAll = cat === 'all';
+                const label = isAll ? "همه گروه‌ها" : cat;
+                const isActive = currentActiveCategory === cat;
+
+                const tab = document.createElement('button');
+                tab.className = `px-4 py-2 text-xs font-bold rounded-xl whitespace-nowrap active:scale-95 transition-all shrink-0 ${
+                    isActive 
+                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' 
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200'
+                }`;
+                tab.innerText = label;
+                tab.onclick = () => {
+                    currentActiveCategory = cat;
+                    renderCategoryFilters();
+                    renderShowcaseView();
+                };
+                tabsContainer.appendChild(tab);
+            });
+        }
+
+        function clearFilters() {
+            document.getElementById('searchInput').value = "";
+            searchString = "";
+            currentActiveCategory = "all";
+            renderCategoryFilters();
+            renderShowcaseView();
+        }
+
+        // --- PRODUCT DETAILS MODAL CONTROL SYSTEM ---
+        function openDetailsModal(id) {
+            const p = products.find(prod => prod.id === id);
+            if (!p) return;
+
+            document.getElementById('modalName').innerText = p.name;
+            document.getElementById('modalCategory').innerText = p.category;
+            document.getElementById('modalDesc').innerText = p.description || 'هیچ توضیحی برای این کالا ثبت نشده است.';
+            document.getElementById('modalPrice').innerText = formatPersianCurrency(p.price);
+            document.getElementById('modalStockValue').innerHTML = `${getPersianNumberStr(p.quantity)} <span class="text-sm font-normal text-slate-400 mr-1">عدد</span>`;
+
+            const status = calculateStockStatus(p.quantity);
+            const statusBox = document.getElementById('modalStockStatusBox');
+            statusBox.innerText = status.label;
+            statusBox.className = `px-4 py-2.5 rounded-xl font-black text-xs text-center min-w-[90px] ${status.css}`;
+
+            const img = document.getElementById('modalImage');
+            if (p.image) {
+                img.src = p.image;
+                img.classList.remove('hidden');
+            } else {
+                img.src = "";
+                img.classList.add('hidden');
+            }
+
+            const modal = document.getElementById('detailsModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('translate-y-full', 'md:scale-95');
+            }, 50);
+        }
+
+        function closeDetailsModal() {
+            const modal = document.getElementById('detailsModal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('translate-y-full');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // --- ADMIN DASHBOARD AND CRUD CONTROLS ENGINE ---
+        function renderAdminDashboard() {
+            // Recalculate Warehouse Statistics Engine State
+            let totalStock = 0;
+            let instockCount = 0;
+            let lowstockCount = 0;
+            let outofstockCount = 0;
+            let totalValue = 0;
+
+            products.forEach(p => {
+                const q = Number(p.quantity) || 0;
+                totalStock += q;
+                totalValue += (q * (Number(p.price) || 0));
+
+                if (q === 0) outofstockCount++;
+                else if (q >= 1 && q <= 5) lowstockCount++;
+                else instockCount++;
+            });
+
+            document.getElementById('stat-totalProducts').innerText = getPersianNumberStr(products.length);
+            document.getElementById('stat-totalStock').innerText = getPersianNumberStr(totalStock);
+            document.getElementById('stat-instock').innerText = getPersianNumberStr(instockCount);
+            document.getElementById('stat-lowstock').innerText = getPersianNumberStr(lowstockCount);
+            document.getElementById('stat-outofstock').innerText = getPersianNumberStr(outofstockCount);
+            document.getElementById('stat-totalValue').innerText = formatPersianCurrency(totalValue);
+
+            // Populate Admin Editable List Engine
+            const listContainer = document.getElementById('adminProductList');
+            listContainer.innerHTML = "";
+
+            if (products.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-6 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs text-slate-400">
+                        هیچ کالایی جهت مدیریت وجود ندارد. ابتدا کالا اضافه کنید.
+                    </div>
+                `;
+                return;
+            }
+
+            products.forEach(p => {
+                const row = document.createElement('div');
+                row.className = "glass border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-3 flex justify-between items-center gap-3";
+                
+                const fallbackSvg = `<div class="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-400 text-xs"><i class="fa-solid fa-box"></i></div>`;
+                const imgTag = p.image ? `<img src="${p.image}" class="w-full h-full object-cover">` : fallbackSvg;
+
+                row.innerHTML = `
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 border shrink-0">
+                            ${imgTag}
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-xs font-black text-slate-800 dark:text-white truncate">${p.name}</h4>
+                            <span class="text-[10px] text-slate-400 block">${p.category} | ${formatPersianCurrency(p.price)}</span>
+                            <span class="text-[10px] font-bold text-emerald-500 block mt-0.5">موجودی: ${getPersianNumberStr(p.quantity)} عدد</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button onclick="editProductBtnCall('${p.id}')" class="w-8 block h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 text-xs" title="ویرایش کالا">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="deleteProductBtnCall('${p.id}')" class="w-8 block h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-500 text-xs" title="حذف کالا">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        // --- SUBMIT COMPONENT CREATE / UPDATE ROUTINES ---
+        function saveProductData(event) {
+            event.preventDefault();
+
+            const pName = document.getElementById('formProductName').value.trim();
+            const pCat = document.getElementById('formProductCategory').value.trim();
+            const pPrice = parseFloat(document.getElementById('formProductPrice').value) || 0;
+            const pQty = parseInt(document.getElementById('formProductQuantity').value) || 0;
+            const pDesc = document.getElementById('formProductDesc').value.trim();
+
+            if (!pName || !pCat) {
+                showToast('لطفا فیلدهای اجباری ستاره‌دار را تکمیل کنید', 'error');
+                return;
+            }
+
+            if (activeAdminEditId) {
+                // Perform Update Routine Path
+                const index = products.findIndex(item => item.id === activeAdminEditId);
+                if (index !== -1) {
+                    products[index].name = pName;
+                    products[index].category = pCat;
+                    products[index].price = pPrice;
+                    products[index].quantity = pQty;
+                    products[index].description = pDesc;
+                    if (globalBase64ImageStr) {
+                        products[index].image = globalBase64ImageStr;
+                    }
+                    products[index].date = getTodayPersianDateStr();
+                    showToast('کالا با موفقیت بروزرسانی شد', 'success');
+                }
+            } else {
+                // Perform Add New Item Path
+                const newProduct = {
+                    id: Date.now().toString(),
+                    name: pName,
+                    category: pCat,
+                    price: pPrice,
+                    quantity: pQty,
+                    description: pDesc,
+                    image: globalBase64ImageStr,
+                    date: getTodayPersianDateStr()
+                };
+                products.unshift(newProduct);
+                showToast('کالای جدید به انبار افزوده شد', 'success');
+            }
+
+            saveToLocalStorage();
+            resetProductForm();
+            renderAdminDashboard();
+        }
+
+        function editProductBtnCall(id) {
+            const p = products.find(item => item.id === id);
+            if (!p) return;
+
+            activeAdminEditId = p.id;
+            document.getElementById('formProductId').value = p.id;
+            document.getElementById('formProductName').value = p.name;
+            document.getElementById('formProductCategory').value = p.category;
+            document.getElementById('formProductPrice').value = p.price;
+            document.getElementById('formProductQuantity').value = p.quantity;
+            document.getElementById('formProductDesc').value = p.description || '';
+
+            const preview = document.getElementById('productImagePreview');
+            const placeholder = document.getElementById('previewPlaceholder');
+            if (p.image) {
+                preview.src = p.image;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                globalBase64ImageStr = p.image;
+            } else {
+                preview.src = "";
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                globalBase64ImageStr = "";
+            }
+
+            document.getElementById('formSectionTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-indigo-500"></i> ویرایش کالای ${p.name}`;
+            document.getElementById('submitFormBtn').innerText = "اعمال تغییرات کالا";
+            document.getElementById('submitFormBtn').className = "w-full py-3.5 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white rounded-xl font-bold text-sm shadow-md active:scale-[0.99] transition-transform";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            window.scrollTo({
+                top: document.getElementById('statsContainer').offsetHeight + 40,
+                behavior: 'smooth'
+            });
+        }
+
+        function deleteProductBtnCall(id) {
+            const p = products.find(item => item.id === id);
+            const nameStr = p ? p.name : 'این کالا';
+            showConfirmModal('حذف کالا از لیست انبار', `آیا مایل به حذف کامل محصول "${nameStr}" هستید؟`, () => {
+                products = products.filter(item => item.id !== id);
+                saveToLocalStorage();
+                renderAdminDashboard();
+                showToast('کالا با موفقیت حذف گردید', 'info');
+                if (activeAdminEditId === id) resetProductForm();
+            });
+        }
+
+        function resetProductForm() {
+            activeAdminEditId = null;
+            document.getElementById('productForm').reset();
+            document.getElementById('formProductId').value = "";
+            document.getElementById('productImagePreview').classList.add('hidden');
+            document.getElementById('previewPlaceholder').classList.remove('hidden');
+            globalBase64ImageStr = "";
+
+            document.getElementById('formSectionTitle').innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> افزودن محصول جدید به انبار`;
+            document.getElementById('submitFormBtn').innerText = "ثبت نهایی کالا در انبار";
+            document.getElementById('submitFormBtn').className = "w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl font-bold text-sm shadow-md active:scale-[0.99] transition-transform";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        // --- CORE BASE64 CONVERSION FLOW ---
+        function previewAndConvertImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Enforce Size Bounds for LocalStorage Optimization (Max ~1.5MB Raw file limit checks)
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('سایز فایل تصویر انتخابی باید کمتر از ۲ مگابایت باشد', 'error');
+                event.target.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Str = e.target.result;
+                globalBase64ImageStr = base64Str;
+                
+                const imgPreview = document.getElementById('productImagePreview');
+                imgPreview.src = base64Str;
+                imgPreview.classList.remove('hidden');
+                document.getElementById('previewPlaceholder').classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- BACKUP & RESTORE UTILITIES (JSON TRANSFER ENGINE) ---
+        function exportInventoryBackup() {
+            if (products.length === 0) {
+                showToast('داده‌ای جهت تولید فایل پشتیبان انبار وجود ندارد', 'error');
+                return;
+            }
+
+            try {
+                const backupPayload = {
+                    version: "2026.1.0",
+                    exportedAt: new Date().toISOString(),
+                    payload: products
+                };
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupPayload));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                
+                const dateStr = new Date().toISOString().slice(0,10);
+                downloadAnchor.setAttribute("download", `inventory-backup-${dateStr}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+
+                showToast('فایل پشتیبان انبار با موفقیت صادر شد', 'success');
+            } catch(e) {
+                showToast('خطا در تولید ساختار پشتیبان فایل انبار', 'error');
+            }
+        }
+
+        function triggerImportFileInput() {
+            document.getElementById('importFileInput').click();
+        }
+
+        function importInventoryBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsedData = JSON.parse(e.target.result);
+                    
+                    // Comprehensive JSON validation schema validation
+                    if (parsedData && Array.isArray(parsedData.payload)) {
+                        showConfirmModal(
+                            'بارگذاری و جایگزینی فایل انبار',
+                            `هشدار: با بارگذاری این فایل، ${getPersianNumberStr(parsedData.payload.length)} محصول جدید جایگزین کل پایگاه داده فعلی خواهد شد. آیا ادامه می‌دهید؟`,
+                            () => {
+                                products = parsedData.payload;
+                                saveToLocalStorage();
+                                renderAdminDashboard();
+                                showToast('انبار با موفقیت بازیابی و همگام شد', 'success');
+                                event.target.value = ""; // Clear file selector string
+                            }
+                        );
+                    } else if (Array.isArray(parsedData)) {
+                        // Alternate direct-array array structure check support
+                        showConfirmModal(
+                            'بارگذاری فایل انبار مستند',
+                            `آیا مایل به جایگزینی بانک اطلاعاتی انبار هستید؟`,
+                            () => {
+                                products = parsedData;
+                                saveToLocalStorage();
+                                renderAdminDashboard();
+                                showToast('اطلاعات انبار بارگذاری شد', 'success');
+                                event.target.value = "";
+                            }
+                        );
+                    } else {
+                        showToast('فرمت فایل پشتیبان معتبر نمی‌باشد', 'error');
+                        event.target.value = "";
+                    }
+                } catch (err) {
+                    showToast('خطا در پردازش فایل متنی ورودی JSON', 'error');
+                    event.target.value = "";
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- UX INTERACTIVE FEEDBACK WRAPPERS ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            // Layout Color Styling Map
+            let bgClass = "bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-xl";
+            let icon = '<i class="fa-solid fa-circle-info text-sky-400"></i>';
+            
+            if (type === 'success') {
+                bgClass = "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20";
+                icon = '<i class="fa-solid fa-circle-check"></i>';
+            } else if (type === 'error') {
+                bgClass = "bg-rose-600 text-white shadow-lg shadow-rose-600/20";
+                icon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            }
+
+            toast.className = `p-4 rounded-2xl flex items-center gap-3 text-xs font-bold transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${bgClass}`;
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Smooth Animate In Sequence
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Automatic Clean Destroy Action
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-10px]');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function showConfirmModal(title, msg, onConfirmCallback) {
+            const modal = document.getElementById('confirmModal');
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = msg;
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+            }, 10);
+
+            // Detach and Overwrite Event Click Triggers
+            const successBtn = document.getElementById('confirmSuccessBtn');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+
+            const clearEvents = () => {
+                successBtn.onclick = null;
+                cancelBtn.onclick = null;
+            };
+
+            successBtn.onclick = () => {
+                clearEvents();
+                closeConfirmModal();
+                if(typeof onConfirmCallback === 'function') onConfirmCallback();
+            };
+
+            cancelBtn.onclick = () => {
+                clearEvents();
+                closeConfirmModal();
+            };
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+    <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(() => console.log('Service Worker Registered'));
+  });
+}
+</script>
+</body>
+</html>
