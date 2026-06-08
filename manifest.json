@@ -1,11 +1,11 @@
 {
   "name": "Rahimi Store",
   "short_name": "Rahimi",
-  "start_url": "/app/"
-  "display": "standalone"
+  "start_url": "/app/",
+  "display": "standalone",
   "background_color": "#0b1220",
   "theme_color": "#0b1220",
-  "icons": ["icon-512.png"
+  "icons": [
     {
       "src": "icon-512.png",
       "sizes": "512x512",
