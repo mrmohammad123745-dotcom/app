@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دنگ حساب</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>💰 دنگ حساب</h1>
+
+        <p class="subtitle">
+            مشخص کن هر نفر چقدر پرداخت کرده تا سیستم تسویه را محاسبه کند
+        </p>
+
+        <div id="peopleContainer"></div>
+
+        <button class="btn add-btn" onclick="addPerson()">
+            + افزودن نفر
+        </button>
+
+        <button class="btn calculate-btn" onclick="calculate()">
+            محاسبه تسویه
+        </button>
+
+    </div>
+
+    <div class="result-card">
+
+        <h2>نتیجه</h2>
+
+        <div id="results"></div>
+
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
