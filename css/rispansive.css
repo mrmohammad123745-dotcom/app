@@ -78,13 +78,16 @@
     width: 100%;
   }
   .btn-menu {
+    width: 100%;
     display: block;
     position: fixed;
-    bottom: 12px;
+    bottom: 30px;
+    right: 78%;
     z-index: 9999;
   }
   .btn-menu img {
-    width: 100%;
+    width: 80px;
+    height: 80px;
   }
   .about-us .about-us-img {
     width: 100%;
@@ -147,7 +150,7 @@
     color: #3f1a0be0;
   }
   .comment .comment-man .comment-section .comment-img {
-     width: 60px;
+    width: 60px;
     height: 60px;
     border-radius: 50%;
     object-fit: cover;
@@ -157,19 +160,17 @@
     box-shadow: 0 4px 12px rgba(63, 26, 11, 0.3);
   }
   .comment {
-    
     background-image: url("../images/file_00000000e6048210a9cdede5f2b7b03c.webp");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     padding: 30px 0px;
-   border-radius: 24px 24px 0px 0px;
-   box-shadow: 0px -10px 10px #3f1a0b49;
+    border-radius: 24px 24px 0px 0px;
+    box-shadow: 0px -10px 10px #3f1a0b49;
   }
   footer {
     background-color: #3f1a0be0;
     padding: 30px;
-
   }
   .footer {
     text-align: center;
