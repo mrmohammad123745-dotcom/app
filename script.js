@@ -23,3 +23,23 @@ links.forEach(link => {
         menuBtn.classList.remove("open");
     });
 });
+window.addEventListener("load", () => {
+
+    const coffeeLoader =
+        document.getElementById("coffee-loader");
+
+    if (!coffeeLoader) return;
+
+    setTimeout(() => {
+
+        coffeeLoader.classList.add(
+            "coffee-loader-hidden"
+        );
+
+        setTimeout(() => {
+            coffeeLoader.remove();
+        }, 900);
+
+    }, 700);
+
+});

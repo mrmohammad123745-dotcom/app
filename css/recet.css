@@ -9,8 +9,7 @@ html {
   scroll-behavior: smooth;
 }
 body {
-  background: #e8cca0;
-  
+  background: #f3e3bd;
   font-family: "vazir", "Arial Narrow", Arial, sans-serif;
 }
 
@@ -58,4 +57,241 @@ img {
 }
 .menu-icon {
   display: none;
+}
+/* =========================
+   COFFEE LOADER
+========================= */
+
+#coffee-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #f3e3bd;
+
+  opacity: 1;
+  visibility: visible;
+
+  transition:
+    opacity 0.8s ease,
+    visibility 0.8s ease;
+}
+
+#coffee-loader.coffee-loader-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.coffee-loader-content {
+  width: min(320px, 80vw);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* فنجان */
+
+.coffee-cup {
+  position: relative;
+
+  width: 125px;
+  height: 110px;
+
+  margin-bottom: 25px;
+}
+
+/* بدنه فنجان */
+
+.coffee-cup-body {
+  position: absolute;
+
+  left: 15px;
+  bottom: 5px;
+
+  width: 95px;
+  height: 65px;
+
+  overflow: hidden;
+
+  background: #fff4dc;
+
+  border-radius: 10px 10px 35px 35px;
+
+  box-shadow: 0 12px 25px rgba(63, 26, 11, 0.15);
+
+  border: 3px solid #6b3218;
+}
+
+/* قهوه */
+
+.coffee-liquid {
+  position: absolute;
+
+  top: 5px;
+  left: 5px;
+
+  width: 85px;
+  height: 22px;
+
+  background: #6b3218;
+
+  border-radius: 50%;
+
+  box-shadow: inset 0 3px 4px rgba(255, 255, 255, 0.15);
+}
+
+/* دسته */
+
+.coffee-cup-handle {
+  position: absolute;
+
+  right: 0;
+  bottom: 20px;
+
+  width: 32px;
+  height: 38px;
+
+  border: 7px solid #6b3218;
+
+  border-left: 0;
+
+  border-radius: 0 20px 20px 0;
+}
+
+/* بخار */
+
+.coffee-steam {
+  position: absolute;
+
+  bottom: 75px;
+
+  width: 7px;
+  height: 35px;
+
+  border-radius: 50%;
+
+  border-left: 3px solid rgba(107, 50, 24, 0.55);
+
+  animation: coffee-steam-animation 2.2s ease-in-out infinite;
+}
+
+.steam-one {
+  left: 40px;
+  animation-delay: 0s;
+}
+
+.steam-two {
+  left: 61px;
+  height: 42px;
+  animation-delay: 0.5s;
+}
+
+.steam-three {
+  left: 82px;
+  animation-delay: 1s;
+}
+
+/* متن */
+
+.coffee-loader-text {
+  margin-bottom: 14px;
+
+  color: #3f1a0b;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  letter-spacing: 0.3px;
+}
+
+/* نوار پیشرفت */
+.coffee-loader-line {
+  width: 180px;
+  height: 5px;
+  margin-top: 18px;
+  background: rgba(107, 50, 24, 0.15);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.coffee-loader-line span {
+  display: block;
+  width: 45%;
+  height: 100%;
+  background: #8b4a2f;
+  border-radius: 20px;
+  animation: coffeeLoading 1.4s ease-in-out infinite;
+}
+
+@keyframes coffeeLoading {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  50% {
+    transform: translateX(120%);
+  }
+
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+/* انیمیشن بخار */
+
+@keyframes coffee-steam-animation {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) rotate(5deg);
+  }
+
+  35% {
+    opacity: 0.7;
+  }
+
+  70% {
+    opacity: 0.35;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-22px) rotate(-8deg);
+  }
+}
+
+
+
+/* موبایل */
+
+@media (max-width: 600px) {
+  .coffee-loader-content {
+    transform: scale(0.9);
+  }
+
+  .coffee-loader-text {
+    font-size: 14px;
+  }
+
+  .coffee-loader-line {
+    width: 160px;
+  }
+}
+
+/* کاهش انیمیشن برای کاربرانی که آن را غیرفعال کرده‌اند */
+
+@media (prefers-reduced-motion: reduce) {
+  .coffee-steam,
+  .coffee-loader-line span {
+    animation: none;
+  }
+
+  #coffee-loader {
+    transition: none;
+  }
 }
