@@ -7,7 +7,7 @@
   background-color: #e7c181;
   margin: 10px 130px 0px 130px;
   border-radius: 30px;
-   box-shadow: 0 6px 18px rgba(63, 26, 11, 0.22); 
+  box-shadow: 0 6px 18px rgba(63, 26, 11, 0.22);
 }
 
 .header-section {
@@ -34,7 +34,9 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  transition: transform 0.5s ease, filter 0.5s ease;
+  transition:
+    transform 0.5s ease,
+    filter 0.5s ease;
 }
 .header-btn:hover {
   transform: translateY(3px) scale(1.04);
@@ -75,7 +77,6 @@
   align-items: center;
   justify-content: space-between;
   padding: 30px 15%;
-
 }
 .hero-content {
   display: block;
@@ -365,7 +366,7 @@
 footer {
   background-color: #fcebda;
   padding: 30px;
-   border-radius: 12% 12% 12% 12% ;
+  border-radius: 12% 12% 12% 12%;
 }
 .footer {
   display: flex;

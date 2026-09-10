@@ -75,18 +75,7 @@
   .hero-image img {
     width: 100%;
   }
-  .btn-menu {
-    width: 100%;
-    display: block;
-    position: fixed;
-    bottom: 100px;
-    right: 78%;
-    z-index: 9999;
-  }
-  .btn-menu img {
-    width: 80px;
-    height: 80px;
-  }
+
   .about-us .about-us-img {
     width: 100%;
     min-width: 100%;
@@ -162,7 +151,7 @@
   footer {
     background-color: #56301b;
     padding: 30px;
-     border-radius: 12% 12% 0 0;
+    border-radius: 12% 12% 0 0;
   }
   .footer {
     text-align: center;
@@ -187,11 +176,7 @@
 
     color: #ddb078;
   }
-  .btn-menu.hide {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-  }
+
   /* دکمه همبرگری */
   .menu-icon {
     position: relative;
@@ -200,10 +185,6 @@
     height: 48px;
     border: none;
     border-radius: 16px;
-    background: #e7c181;
-    box-shadow:
-      0 8px 20px rgba(63, 26, 11, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.7);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -267,9 +248,10 @@
     left: 40px;
     width: 15rem;
     text-align: center;
-    padding: 20px;
+
+    padding: 0px;
     border-radius: 30px;
-    background: #F3E3BD;
+    background: #f3e3bd;
     box-shadow:
       0 25px 60px rgba(63, 26, 11, 0.28),
       inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -282,45 +264,17 @@
       visibility 0.4s;
   }
 
-  /* منوی باز */
-  .nav-list.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0) scale(1);
-  }
-
   /* لینک‌های منو */
   .nav-list a {
     display: block;
-
     position: relative;
-    padding: 17px 18px;
-    margin: 8px 0;
+    padding: 5px;
+    margin: 10px 0px;
     border-radius: 18px;
     color: #3f1a0b;
     text-decoration: none;
     font-weight: bold;
     transition: 0.3s ease;
-  }
-
-  /* افکت هاور */
-  .nav-list a::before {
-    content: "";
-    position: absolute;
-    right: 0;
-    top: 50%;
-    width: 4px;
-    height: 0;
-    border-radius: 10px;
-    background: #6b3218;
-    transform: translateY(-50%);
-    transition: 0.3s ease;
-  }
-
-  .nav-list a:hover {
-    padding-right: 25px;
-    background: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 8px 20px rgba(63, 26, 11, 0.08);
   }
 
   .nav-list a:hover::before {
